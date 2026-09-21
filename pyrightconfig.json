@@ -1,0 +1,12 @@
+{
+  "extraPaths": [
+    "/mnt/AI/ComfyUI/bin/linux/ComfyUI-01"
+  ],
+  "venvPath": "/mnt/AI/ComfyUI/bin/linux/ComfyUI-01",
+  "venv": ".venv",
+  "include": [
+    "__init__.py",
+    "comfy_nodes.py",
+    "resolver.py"
+  ]
+}

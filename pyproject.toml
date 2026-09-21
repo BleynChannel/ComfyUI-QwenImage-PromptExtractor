@@ -1,0 +1,12 @@
+[tool.pyright]
+# ComfyUI's runtime (which provides ``comfy_api.latest``) lives outside this
+# custom-node directory. Point the type checker at it so imports resolve.
+extraPaths = [
+    "/mnt/AI/ComfyUI/bin/linux/ComfyUI-01",
+]
+include = ["__init__.py", "comfy_nodes.py", "resolver.py"]
+
+[tool.mypy]
+# Make ``import comfy_api.latest`` resolvable for static type checking.
+python_path = "/mnt/AI/ComfyUI/bin/linux/ComfyUI-01"
+files = ["comfy_nodes.py", "resolver.py", "__init__.py"]
