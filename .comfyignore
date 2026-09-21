@@ -1,0 +1,4 @@
+# Files excluded from the published Comfy Registry archive
+test_resolver.py
+__pycache__/
+*.py[cod]
