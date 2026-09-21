@@ -22,6 +22,13 @@ It is designed for both published variants:
 In both cases `wh_ratio` and `ratio_follow` are mutually exclusive — exactly one
 carries a value.
 
+## Installation
+
+```bash
+cd ComfyUI/custom_nodes
+git clone https://github.com/BleynChannel/ComfyUI-QwenImage-PromptExtractor.git
+```
+
 ## How it works
 
 1. Parses the JSON hint and validates the `rewritten_prompt`.
