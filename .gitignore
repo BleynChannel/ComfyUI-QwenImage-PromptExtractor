@@ -12,3 +12,7 @@ __pycache__/
 .venv/
 venv/
 env/
+
+# Local-only type-checker configs (machine-specific paths, not published)
+pyrightconfig.json
+.mypy.ini

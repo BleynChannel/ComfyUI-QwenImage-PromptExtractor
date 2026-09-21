@@ -1,12 +1,19 @@
-[tool.pyright]
-# ComfyUI's runtime (which provides ``comfy_api.latest``) lives outside this
-# custom-node directory. Point the type checker at it so imports resolve.
-extraPaths = [
-    "/mnt/AI/ComfyUI/bin/linux/ComfyUI-01",
-]
-include = ["__init__.py", "comfy_nodes.py", "resolver.py"]
+[project]
+name = "QwenImage-PromptExtractor"
+version = "0.1.0"
+description = "ComfyUI custom node that resolves a Qwen Image 2.1 Prompt Enhancer JSON hint (rewritten prompt + aspect ratio/size) into a ready-to-use prompt and exact width/height."
+license = "MIT"
+requires-python = ">=3.10"
+repository = "https://github.com/BleynChannel/ComfyUI-QwenImage-PromptExtractor"
 
-[tool.mypy]
-# Make ``import comfy_api.latest`` resolvable for static type checking.
-python_path = "/mnt/AI/ComfyUI/bin/linux/ComfyUI-01"
-files = ["comfy_nodes.py", "resolver.py", "__init__.py"]
+[project.urls]
+Homepage = "https://github.com/BleynChannel/ComfyUI-QwenImage-PromptExtractor"
+Documentation = "https://github.com/BleynChannel/ComfyUI-QwenImage-PromptExtractor#readme"
+Source = "https://github.com/BleynChannel/ComfyUI-QwenImage-PromptExtractor"
+
+[tool.comfy]
+# TODO: replace with your Comfy Registry publisher id (the part after @ on your
+# registry.comfy.org profile page). It is globally unique and cannot be changed later.
+PublisherId = "YOUR_PUBLISHER_ID"
+DisplayName = "Prompt & Dimensions from LLM"
+requires-comfyui = ">=0.3.40"
