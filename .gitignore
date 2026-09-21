@@ -16,3 +16,6 @@ env/
 # Local-only type-checker configs (machine-specific paths, not published)
 pyrightconfig.json
 .mypy.ini
+
+# Comfy CLI publish artifact
+node.zip
