@@ -1,9 +1,10 @@
 # Prompt & Dimensions from LLM
 
-A ComfyUI custom node created **exclusively** for the
+A ComfyUI custom node package created **exclusively** for the
 [Qwen Image 2.1 Prompt Enhancer](https://huggingface.co/Qwen/Qwen-Image-2.1)
-family. It consumes the JSON hint the model emits and turns it into a ready-to-use
-prompt plus an exact image resolution.
+family. It ships two nodes: one that consumes the JSON hint the model emits and
+turns it into a ready-to-use prompt plus an exact image resolution, and a standalone
+dimension resolver (see below).
 
 ## Description
 
@@ -62,6 +63,31 @@ If both `wh_ratio` and `ratio_follow` are present, `ratio_follow` wins.
 | `prompt` | String | The rewritten prompt (`rewritten_prompt`). |
 | `width` | Int | Image width, in pixels. |
 | `height` | Int | Image height, in pixels. |
+
+## Dimensions from Ratio (standalone)
+
+A second node in this package that resolves image width/height **without any model**.
+Provide either an aspect ratio or follow an uploaded image — the two are mutually
+exclusive (at least one required; if both are present, `ratio_follow` wins).
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `wh_ratio` | String | Aspect ratio e.g. `16:9`. Used with `megapixels`. Mutually exclusive with `ratio_follow`. |
+| `ratio_follow` | String | Reference an uploaded image's exact size, e.g. `<image1>`. Mutually exclusive with `wh_ratio`. |
+| `megapixels` | Float | Target size, `0.1–16.0`. Used only with `wh_ratio` (ignored with `ratio_follow`). |
+| `multiple` | Int | Grid to round to, `8–128` (step 4, default 8). Used only with `wh_ratio`. |
+| `images` | Autogrow (image) | Up to 10 reference images, keys `image0`…`image9`. |
+
+| Output | Type | Description |
+| --- | --- | --- |
+| `width` | Int | Image width, in pixels. |
+| `height` | Int | Image height, in pixels. |
+
+`wh_ratio` + `megapixels` computes a resolution matching ComfyUI's built-in
+**Resolution Selector** (`1 MP = 1024 × 1024`, rounded to a multiple of `multiple`),
+so e.g. `1:1 @ 1 MP → 1024 × 1024`. `ratio_follow` copies the referenced image's
+exact pixel size. This node is not tied to a generation model: use it with any
+text-to-image node that accepts width/height (e.g. Empty Latent Image).
 
 ## Resources
 
