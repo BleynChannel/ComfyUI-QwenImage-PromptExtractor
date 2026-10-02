@@ -29,6 +29,7 @@ from .resolver import (
     PromptResolutionError,
     parse_json_prompt,
     resolve_dimensions,
+    resolve_resolution,
 )
 
 MAX_REFERENCE_IMAGES = 10
@@ -114,10 +115,89 @@ class PromptDimensionsFromLLM(io.ComfyNode):
         return io.NodeOutput(prompt, width, height)
 
 
+class DimensionsFromRatio(io.ComfyNode):
+    @classmethod
+    def define_schema(cls) -> io.Schema:
+        return io.Schema(
+            node_id="DimensionsFromRatio",
+            display_name="Dimensions from Ratio",
+            category="prompt/resolve",
+            description=(
+                "Resolves target image width/height from an aspect ratio "
+                "(wh_ratio, used with megapixels) or by following an uploaded "
+                "image's exact size (ratio_follow). Exactly one is required."
+            ),
+            inputs=[
+                io.String.Input(
+                    "wh_ratio",
+                    placeholder="16:9",
+                    tooltip="Aspect ratio e.g. '16:9'. Used with megapixels to "
+                    "derive a resolution. Mutually exclusive with ratio_follow.",
+                ),
+                io.String.Input(
+                    "ratio_follow",
+                    placeholder="<image1>",
+                    tooltip="Reference an uploaded image's exact size, e.g. "
+                    "'<image1>'. Mutually exclusive with wh_ratio.",
+                ),
+                io.Float.Input(
+                    "megapixels",
+                    min=0.1,
+                    max=16.0,
+                    step=0.1,
+                    default=1.0,
+                    tooltip="Target size in megapixels (0.1-16.0). Used only when "
+                    "wh_ratio is provided; ignored when ratio_follow is used.",
+                ),
+                io.Int.Input(
+                    "multiple",
+                    min=8,
+                    max=128,
+                    step=4,
+                    default=8,
+                    tooltip="Pixel grid that resolved width/height are rounded to "
+                    "(default 8). Only used when wh_ratio is provided.",
+                ),
+                io.Autogrow.Input(
+                    "images",
+                    template=io.Autogrow.TemplatePrefix(
+                        io.Image.Input("image"),
+                        prefix="image",
+                        min=0,
+                        max=MAX_REFERENCE_IMAGES,
+                    ),
+                    tooltip="Up to 10 reference images. ratio_follow can name one "
+                    "of them (e.g. '<image1>') to reuse its exact size.",
+                ),
+            ],
+            outputs=[
+                io.Int.Output("width"),
+                io.Int.Output("height"),
+            ],
+            search_aliases=["dimensions", "width", "height", "ratio", "megapixel", "size"],
+        )
+
+    @classmethod
+    def execute(cls, **kwargs) -> io.NodeOutput:
+        try:
+            wh_ratio: str = kwargs.get("wh_ratio", "")
+            ratio_follow: str = kwargs.get("ratio_follow", "")
+            megapixels: float = kwargs["megapixels"]
+            multiple: int = kwargs.get("multiple", _DEFAULT_MULTIPLE)
+            images = kwargs.get("images")
+            width, height = resolve_resolution(
+                wh_ratio, ratio_follow, megapixels, images, multiple
+            )
+        except PromptResolutionError as exc:
+            raise ValueError(str(exc)) from exc
+
+        return io.NodeOutput(width, height)
+
+
 class PromptDimensionsExtension(ComfyExtension):
     @override
     async def get_node_list(self) -> list[type[io.ComfyNode]]:
-        return [PromptDimensionsFromLLM]
+        return [PromptDimensionsFromLLM, DimensionsFromRatio]
 
 
 async def comfy_entrypoint() -> PromptDimensionsExtension:

@@ -122,4 +122,61 @@ for (mp, ratio, mult), exp in MATCH_RS:
     )
     check(f"matches Resolution Selector {ratio} @{mp}MP", (w, h) == exp)
 
+# --- resolve_resolution: (wh_ratio | ratio_follow) -> (width, height) ---
+# wh_ratio + megapixels (no images, no follow)
+w, h = r.resolve_resolution("16:9", "", 1.0, None)
+check("wh_ratio 16:9 @1MP", (w, h) == (1368, 768))
+
+# 1:1 @1MP -> exactly 1024x1024 (matches Resolution Selector)
+w, h = r.resolve_resolution("1:1", "", 1.0, None)
+check("wh_ratio 1:1 @1MP", (w, h) == (1024, 1024))
+
+# ratio_follow reuses an uploaded image's exact size (1-based -> 0-based key)
+w, h = r.resolve_resolution("", "<image1>", 5.0, {"image0": FakeImg(1024, 1024)})
+check("ratio_follow <image1> ignores MP", (w, h) == (1024, 1024))
+
+# follow reference image2 -> actual image1
+w, h = r.resolve_resolution("", "<image2>", 1.0, {"image1": FakeImg(768, 1344)})
+check("ratio_follow <image2> -> image1", (w, h) == (1344, 768))
+
+# both present -> follow wins (exact size, MP ignored)
+# FakeImg(h, w): h=320, w=240 -> (width, height) = (240, 320)
+w, h = r.resolve_resolution("4:3", "<image1>", 99.0, {"image0": FakeImg(320, 240)})
+check("both present -> follow wins", (w, h) == (240, 320))
+
+# custom 'multiple' rounds to nearest multiple (1:1 @1MP, multiple=16 -> 1024)
+w, h = r.resolve_resolution("1:1", "", 1.0, None, multiple=16)
+check("multiple=16 rounds to nearest", (w, h) == (1024, 1024))
+
+# neither provided -> error
+expect_error("neither provided", lambda: r.resolve_resolution("", "", 1.0, None))
+
+# empty strings count as not provided -> error
+expect_error("empty strings", lambda: r.resolve_resolution("", "", 1.0, None))
+
+# wh_ratio rejects '/'
+expect_error("wh_ratio rejects '/'", lambda: r.resolve_resolution("16/9", "", 1.0, None))
+
+# non-positive ratio
+expect_error("non-positive ratio", lambda: r.resolve_resolution("0:9", "", 1.0, None))
+
+# follow missing image
+expect_error("follow missing image", lambda: r.resolve_resolution(
+    "", "<image9>", 1.0, {"image0": FakeImg(100, 100)}))
+
+# follow non-numeric
+expect_error("follow non-numeric", lambda: r.resolve_resolution(
+    "", "<abc>", 1.0, {"image0": FakeImg(100, 100)}))
+
+# reject 'image1' no brackets
+expect_error("reject 'image1' no brackets", lambda: r.resolve_resolution(
+    "", "image1", 1.0, {"image0": FakeImg(512, 384)}))
+
+# reject '<1>' no image prefix
+expect_error("reject '<1>' no image prefix", lambda: r.resolve_resolution(
+    "", "<1>", 1.0, {"image0": FakeImg(512, 384)}))
+
+# bad megapixels
+expect_error("bad megapixels", lambda: r.resolve_resolution("1:1", "", 0, None))
+
 print("\nALL TESTS PASSED")

@@ -33,6 +33,7 @@ __all__ = [
     "dims_from_ratio",
     "resolve_follow_key",
     "resolve_dimensions",
+    "resolve_resolution",
 ]
 
 # ComfyUI latent/vae grids are multiples of 8; snap resolved sizes to this.
@@ -288,3 +289,40 @@ def resolve_dimensions(
     if width is None or height is None:
         raise PromptResolutionError("Failed to determine image dimensions.")
     return prompt, width, height
+
+
+def resolve_resolution(
+    wh_ratio: Any,
+    ratio_follow: Any,
+    megapixels: float,
+    images: Mapping[str, Any] | None = None,
+    multiple: int = _DIVISOR,
+) -> tuple[int, int]:
+    """Resolve ``(width, height)`` from ``wh_ratio`` / ``ratio_follow``.
+
+    ``wh_ratio`` (e.g. ``"16:9"``) and ``ratio_follow`` (e.g. ``"<image1>"``) are
+    mutually exclusive: at least one must be present and non-empty. When both are
+    present, ``ratio_follow`` wins because it yields an exact pixel size
+    independent of the megapixel input. Reuses ``parse_ratio`` / ``dims_from_ratio``
+    and ``resolve_follow_key`` / ``_image_size``.
+    """
+    wh = _as_str(wh_ratio)
+    follow = _as_str(ratio_follow)
+    images = images or {}
+
+    if follow:
+        key = resolve_follow_key(follow, images.keys())
+        return _image_size(key, images)
+
+    if wh:
+        ratio = parse_ratio(wh)
+        if ratio is None:
+            raise PromptResolutionError(
+                f"wh_ratio could not be parsed from '{wh_ratio}'."
+            )
+        return dims_from_ratio(ratio[0], ratio[1], megapixels, multiple)
+
+    raise PromptResolutionError(
+        "Provide either 'wh_ratio' (e.g. '16:9') or 'ratio_follow' (e.g. '<image1>') "
+        "to determine the image dimensions."
+    )

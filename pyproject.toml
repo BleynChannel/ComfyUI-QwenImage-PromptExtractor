@@ -1,6 +1,6 @@
 [project]
 name = "QwenImage-PromptExtractor"
-version = "0.1.0"
+version = "0.2.0"
 description = "ComfyUI custom node that resolves a Qwen Image 2.1 Prompt Enhancer JSON hint (rewritten prompt + aspect ratio/size) into a ready-to-use prompt and exact width/height."
 license = "MIT"
 requires-python = ">=3.10"
